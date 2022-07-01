@@ -36,12 +36,20 @@ class PREDICTION:
         self.fittedValues = predict(self, self.X)
         self.residuals = self.Y - self.fittedValues[:, 0]
 
+        print(self.residuals)
+
         return self.fittedValues, self.residuals
 
     def plotResults(self):
         import matplotlib.pyplot as plt
         plt.plot(range(len(self.fittedValues)), self.fittedValues, 'r', label='trained')
         plt.plot(range(len(self.Y)), self.Y, 'b', label='original')
+        plt.legend(loc='upper left')
+        plt.show()
+
+    def plotError(self):
+        import matplotlib.pyplot as plt
+        plt.scatter(range(len(self.residuals)), self.residuals)
         plt.legend(loc='upper left')
         plt.show()
 
@@ -99,7 +107,7 @@ x_test = df_test.iloc[:120,2:4]
 y_test = df_test.iloc[:120,5]
 
 pred = PREDICTION(x_test,y_test,mfc, consequents)
+pred.prediction()
 # print(pred)
 pred.plotResults()
-
-# testing
+pred.plotError()
