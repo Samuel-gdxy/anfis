@@ -95,7 +95,6 @@ mfc = membership.membershipfunction.MemFuncs(mf)
 
 path = os.path.dirname(os.path.abspath(__file__))
 df_test = pd.read_csv(os.path.join(path, 'kdd_test.csv'), low_memory=False)
-# df_test = pd.read_excel(os.path.join(path, 'kdd_test.xlsx'))
 x_test = df_test.iloc[:120,2:4]
 y_test = df_test.iloc[:120,5]
 
