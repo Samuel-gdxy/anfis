@@ -101,3 +101,5 @@ y_test = df_test.iloc[:120,5]
 pred = PREDICTION(x_test,y_test,mfc, consequents)
 # print(pred)
 pred.plotResults()
+
+# testing
