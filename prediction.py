@@ -89,25 +89,3 @@ def predict(ANFISObj, varsToTest):
     print("layerFive", layerFive)
 
     return layerFive
-
-
-consequents = [[-3.835804820182112], [460.5980554919805], [-132.9793790801906],[-284.7300195743627],
-               [-167.41357508428607], [310.4560294633015], [264.1486783401019], [63.87287797980972],
-               [-271.0164033646234], [17.60359047421069], [-490.1372826642983], [187.2030834125831]]
-
-mf = [
-      [['gaussmf', {'mean': 0., 'sigma': 1.}], ['gaussmf', {'mean': -1., 'sigma': 2.}]],
-      [['gaussmf', {'mean': 0., 'sigma': 1.}], ['gaussmf', {'mean': -1., 'sigma': 2.}]]
-      ]
-mfc = membership.membershipfunction.MemFuncs(mf)
-
-path = os.path.dirname(os.path.abspath(__file__))
-df_test = pd.read_csv(os.path.join(path, 'kdd_test.csv'), low_memory=False)
-x_test = df_test.iloc[:120,2:4]
-y_test = df_test.iloc[:120,5]
-
-pred = PREDICTION(x_test,y_test,mfc, consequents)
-pred.prediction()
-# print(pred)
-pred.plotResults()
-pred.plotError()
