@@ -33,24 +33,29 @@ class PREDICTION:
 
 
     def prediction(self):
-        self.fittedValues = predict(self, self.X)
+        self.fitted = []
+        self.resid = []
+        self.fittedValues = np.round_(predict(self, self.X))
+        for xs in self.fittedValues:
+            for x in xs:
+                self.fitted.append(x)
         self.residuals = self.Y - self.fittedValues[:, 0]
+        for y in self.residuals:
+            self.resid.append(y)
 
-        print(self.residuals)
-
-        return self.fittedValues, self.residuals
+        return self.fitted, self.resid
 
     def plotResults(self):
         import matplotlib.pyplot as plt
-        plt.plot(range(len(self.fittedValues)), self.fittedValues, 'r', label='trained')
+        plt.plot(range(len(self.fitted)), self.fitted, 'r', label='trained')
         plt.plot(range(len(self.Y)), self.Y, 'b', label='original')
         plt.legend(loc='upper left')
         plt.show()
 
     def plotError(self):
         import matplotlib.pyplot as plt
-        plt.scatter(range(len(self.residuals)), self.residuals)
-        plt.legend(loc='upper left')
+        # plt.scatter(range(len(self.residuals)), self.residuals)
+        plt.errorbar(range(len(self.fitted)), self.fitted, fmt='o', color='b', yerr=self.resid, capsize=2, linestyle='None')
         plt.show()
 
 
@@ -86,6 +91,5 @@ def predict(ANFISObj, varsToTest):
 
     # layer five
     layerFive = np.dot(layerFour, ANFISObj.consequents)
-    print("layerFive", layerFive)
 
     return layerFive
