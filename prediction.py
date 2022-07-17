@@ -91,5 +91,6 @@ def predict(ANFISObj, varsToTest):
 
     # layer five
     layerFive = np.dot(layerFour, ANFISObj.consequents)
+    print(layerFive)
 
     return layerFive
