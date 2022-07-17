@@ -132,10 +132,10 @@ class ANFIS:
             epoch = epoch + 1
 
 
-        self.fittedValues = predict(self,self.X_test)
+        self.fittedValues, self.consequents_final, self.memClass_final = predict(self,self.X_test)
         self.residuals = self.Y_test - self.fittedValues[:,0]
         # fittedValues = predict value
-        return self.fittedValues
+        return self.fittedValues, self.consequents_final,self.memClass_final
 
 
     def plotErrors(self):
@@ -280,9 +280,8 @@ def predict(ANFISObj, varsToTest):
 
     #layer five
     layerFive = np.dot(layerFour,ANFISObj.consequents)
-    print("layerFive",layerFive)
 
-    return layerFive
+    return layerFive, ANFISObj.consequents, getattr(ANFISObj.memClass, "MFList")
 
 
 if __name__ == "__main__":

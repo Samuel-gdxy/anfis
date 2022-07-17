@@ -6,52 +6,74 @@ import numpy as np
 import pandas as pd
 import os
 from datetime import datetime
+import re
 
 """
 Create a control panel to control either training or doing prediction
+0: activate training module
+1: activate prediction module
 """
-
-# input training dataset
-path = os.path.dirname(os.path.abspath(__file__))
-df = pd.read_csv(os.path.join(path, 'kddcup99_csv3.csv'), low_memory=False)
-x = df.iloc[:120, [25, 27, 37, 39]]
-y = df.iloc[:120, 42]
-
-# input testing dataset
-df_test = pd.read_csv(os.path.join(path, 'kdd_test.csv'), low_memory=False)
-x_test = df_test.iloc[:120, 2:4]
-y_test = df_test.iloc[:120, 5]
-
-# input membership functions (gaussian) (4features + 3mfs)
-mf = [
-    [['gaussmf', {'mean': 0., 'sigma': 1.}], ['gaussmf', {'mean': -1., 'sigma': 2.}], ['gaussmf', {'mean': 2., 'sigma': 3.}]],
-    [['gaussmf', {'mean': 0., 'sigma': 1.}], ['gaussmf', {'mean': -1., 'sigma': 2.}], ['gaussmf', {'mean': 2., 'sigma': 3.}]],
-    [['gaussmf', {'mean': 0., 'sigma': 1.}], ['gaussmf', {'mean': -1., 'sigma': 2.}], ['gaussmf', {'mean': 2., 'sigma': 3.}]],
-    [['gaussmf', {'mean': 0., 'sigma': 1.}], ['gaussmf', {'mean': -1., 'sigma': 2.}], ['gaussmf', {'mean': 2., 'sigma': 3.}]]
-]
-mfc = membership.membershipfunction.MemFuncs(mf)
-
-# input consequents
-consequents = [[-3.835804820182112], [460.5980554919805], [-132.9793790801906], [-284.7300195743627],
-            [-167.41357508428607], [310.4560294633015], [264.1486783401019], [63.87287797980972],
-            [-271.0164033646234], [17.60359047421069], [-490.1372826642983], [187.2030834125831]]
-
-control = "t"
+control = 1
 # count time
 start_time = datetime.now()
-if control.lower() == "t":
-    anf = anfis.ANFIS(x, y, x_test, y_test, mfc)
-    anf.trainHybridJangOffLine(epochs=10)
-elif control.lower() == "p":
+
+
+# input training dataset
+def input_training_data(file_name: str, data_size: int, features, target: int):
+    path = os.path.dirname(os.path.abspath(__file__))
+    df_back = pd.read_csv(os.path.join(path, file_name), low_memory=False)
+    x = df_back.iloc[:data_size, features]
+    y = df_back.iloc[:data_size, target]
+
+    return x, y
+
+
+# get parameters from back attack dataset
+def back_attack_training():
+    # input initial membership functions (gaussian) (4features + 3mfs)
     mf = [
-        [['gaussmf', {'mean': 0., 'sigma': 1.}], ['gaussmf', {'mean': -1., 'sigma': 2.}]],
-        [['gaussmf', {'mean': 0., 'sigma': 1.}], ['gaussmf', {'mean': -1., 'sigma': 2.}]]
+        [['gaussmf', {'mean': 0., 'sigma': 1.}], ['gaussmf', {'mean': -1., 'sigma': 2.}],
+         ['gaussmf', {'mean': 2., 'sigma': 3.}]],
+        [['gaussmf', {'mean': 0., 'sigma': 1.}], ['gaussmf', {'mean': -1., 'sigma': 2.}],
+         ['gaussmf', {'mean': 2., 'sigma': 3.}]],
+        [['gaussmf', {'mean': 0., 'sigma': 1.}], ['gaussmf', {'mean': -1., 'sigma': 2.}],
+         ['gaussmf', {'mean': 2., 'sigma': 3.}]],
+        [['gaussmf', {'mean': 0., 'sigma': 1.}], ['gaussmf', {'mean': -1., 'sigma': 2.}],
+         ['gaussmf', {'mean': 2., 'sigma': 3.}]]
     ]
     mfc = membership.membershipfunction.MemFuncs(mf)
 
+    x_back, y_back = input_training_data("back_attack.csv", 200, [24, 26, 37, 39], 42)
+    anf_back = anfis.ANFIS(x_back, y_back, x_back, y_back, mfc)
+    anf_back.trainHybridJangOffLine(epochs=2)
+    # record trained parameters
+    np.save('back_consequents.npy', anf_back.consequents_final)
+    np.save('back_mfs.npy', anf_back.memClass_final)
+
+
+if control == 0:
+    # training for back attack
+    back_attack_training()
+
+elif control == 1:
+    f1 = np.load('back_consequents.npy', allow_pickle=True)
+    f2 = np.load('back_mfs.npy', allow_pickle=True)
+    # input testing dataset
+    x_test, y_test = input_training_data("back_attack.csv", 250, [24, 26, 37, 39], 42)
+
+    # input consequents
+    consequents = f1
+
+    # input membership functions
+    mf = f2
+    mfc = membership.membershipfunction.MemFuncs(mf)
+
+    # activate module
     pred = prediction.PREDICTION(x_test, y_test, mfc, consequents)
     pred.prediction()
+    # plot result
     pred.plotResults()
+    # plot error
     pred.plotError()
 
 end_time = datetime.now()
