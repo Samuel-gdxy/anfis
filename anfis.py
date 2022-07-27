@@ -73,7 +73,7 @@ class ANFIS:
             [layerFour, wSum, w] = forwardHalfPass(self, self.X)
 
             #layer five: least squares estimate
-            layerFive = np.array(self.LSE(layerFour,self.Y,initialGamma))
+            layerFive = np.array(np.round_(self.LSE(layerFour,self.Y,initialGamma)))
             self.consequents = layerFive
             layerFive = np.dot(layerFour,layerFive)
 

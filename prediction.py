@@ -35,7 +35,7 @@ class PREDICTION:
     def prediction(self):
         self.fitted = []
         self.resid = []
-        self.fittedValues = np.round_(predict(self, self.X))
+        self.fittedValues = predict(self, self.X)
         for xs in self.fittedValues:
             for x in xs:
                 self.fitted.append(x)
