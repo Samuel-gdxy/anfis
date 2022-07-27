@@ -8,163 +8,93 @@ import os
 from datetime import datetime
 from sklearn import preprocessing
 
-"""
-Create a control panel to control either training or doing prediction
-0: activate training module
-1: activate prediction module
-"""
+
+# input training dataset
+def input_training_data(file_name: str, data_size, features, target: int):
+    path = os.path.dirname(os.path.abspath(__file__))
+    df_back = pd.read_csv(os.path.join(path, file_name), low_memory=False)
+    x = df_back.iloc[:data_size, features]
+    y = df_back.iloc[:data_size, target]
+
+    return x, y
 
 
+def training_time_testing(mf, features):
+    # count training time
+    start_time = datetime.now()
+
+    mf = mf
+    mfc = membership.membershipfunction.MemFuncs(mf)
+    x, y = input_training_data('./data/kddcup99_csv3.csv', 120, features, 42)
+    anf = anfis.ANFIS(x, y, x, y, mfc)
+    anf.trainHybridJangOffLine(epochs=10)
+
+    end_time = datetime.now()
+    print('Duration: {}'.format(end_time - start_time))
+
+# training anfis model with initial data and parameters
+def attack_training(attack):
+    # input initial membership functions (gaussian) (4features + 3mfs)
+    mf = [
+        [['gaussmf', {'mean': 0., 'sigma': 1.}], ['gaussmf', {'mean': -1., 'sigma': 2.}],
+         ['gaussmf', {'mean': 2., 'sigma': 3.}]],
+        [['gaussmf', {'mean': 0., 'sigma': 1.}], ['gaussmf', {'mean': -1., 'sigma': 2.}],
+         ['gaussmf', {'mean': 2., 'sigma': 3.}]],
+        [['gaussmf', {'mean': 0., 'sigma': 1.}], ['gaussmf', {'mean': -1., 'sigma': 2.}],
+         ['gaussmf', {'mean': 2., 'sigma': 3.}]],
+        [['gaussmf', {'mean': 0., 'sigma': 1.}], ['gaussmf', {'mean': -1., 'sigma': 2.}],
+         ['gaussmf', {'mean': 2., 'sigma': 3.}]]
+    ]
+    mfc = membership.membershipfunction.MemFuncs(mf)
+
+    x, y = input_training_data(f'{attack}_attack.csv', 4000, [24, 26, 37, 39], 42)
+    anf = anfis.ANFIS(x, y, x, y, mfc)
+    anf.trainHybridJangOffLine(epochs=10)
+    # record trained parameters
+    np.save(f'{attack}_consequents.npy', anf.consequents_final)
+    np.save(f'{attack}_mfs.npy', anf.memClass_final)
+
+
+# predict back attack using trained parameters
+def attack_prediction(dataset, attack):
+    f1 = np.load(f'./parameters/{attack}_consequents2.npy', allow_pickle=True)
+    f2 = np.load(f'./parameters/{attack}_mfs2.npy', allow_pickle=True)
+    # input testing dataset
+    x_test, y_test = dataset
+
+    # input consequents
+    consequents = f1
+
+    # input membership functions
+    mf = f2
+    mfc = membership.membershipfunction.MemFuncs(mf)
+
+    # activate module
+    pred = prediction.PREDICTION(x_test, y_test, mfc, consequents)
+    pred.prediction()
+    # plot error
+    # pred.plotError()
+    return pred.fitted
+
+
+# control either activate training or prediction function
 def control(control):
-    # input training dataset
-    def input_training_data(file_name: str, data_size, features, target: int):
-        path = os.path.dirname(os.path.abspath(__file__))
-        df_back = pd.read_csv(os.path.join(path, file_name), low_memory=False)
-        x = df_back.iloc[:data_size, features]
-        y = df_back.iloc[:data_size, target]
-
-        return x, y
-
-    # get parameters from back attack dataset
-    def back_attack_training():
-        # input initial membership functions (gaussian) (4features + 3mfs)
-        mf = [
-            [['gaussmf', {'mean': 0., 'sigma': 1.}], ['gaussmf', {'mean': -1., 'sigma': 2.}],
-             ['gaussmf', {'mean': 2., 'sigma': 3.}]],
-            [['gaussmf', {'mean': 0., 'sigma': 1.}], ['gaussmf', {'mean': -1., 'sigma': 2.}],
-             ['gaussmf', {'mean': 2., 'sigma': 3.}]],
-            [['gaussmf', {'mean': 0., 'sigma': 1.}], ['gaussmf', {'mean': -1., 'sigma': 2.}],
-             ['gaussmf', {'mean': 2., 'sigma': 3.}]],
-            [['gaussmf', {'mean': 0., 'sigma': 1.}], ['gaussmf', {'mean': -1., 'sigma': 2.}],
-             ['gaussmf', {'mean': 2., 'sigma': 3.}]]
-        ]
-        mfc = membership.membershipfunction.MemFuncs(mf)
-
-        x_back, y_back = input_training_data("back_attack.csv", 4000, [24, 26, 37, 39], 42)
-        anf_back = anfis.ANFIS(x_back, y_back, x_back, y_back, mfc)
-        anf_back.trainHybridJangOffLine(epochs=10)
-        # record trained parameters
-        np.save('back_consequents.npy', anf_back.consequents_final)
-        np.save('back_mfs.npy', anf_back.memClass_final)
-
-    # get parameters from smurf attack dataset
-    def smurf_attack_training():
-        # input initial membership functions (gaussian) (4features + 3mfs)
-        mf = [
-            [['gaussmf', {'mean': 0., 'sigma': 1.}], ['gaussmf', {'mean': -1., 'sigma': 2.}],
-             ['gaussmf', {'mean': 2., 'sigma': 3.}]],
-            [['gaussmf', {'mean': 0., 'sigma': 1.}], ['gaussmf', {'mean': -1., 'sigma': 2.}],
-             ['gaussmf', {'mean': 2., 'sigma': 3.}]],
-            [['gaussmf', {'mean': 0., 'sigma': 1.}], ['gaussmf', {'mean': -1., 'sigma': 2.}],
-             ['gaussmf', {'mean': 2., 'sigma': 3.}]],
-            [['gaussmf', {'mean': 0., 'sigma': 1.}], ['gaussmf', {'mean': -1., 'sigma': 2.}],
-             ['gaussmf', {'mean': 2., 'sigma': 3.}]]
-        ]
-        mfc = membership.membershipfunction.MemFuncs(mf)
-
-        x_back, y_back = input_training_data("smurf_attack.csv", 4000, [24, 26, 37, 39], 42)
-        anf_back = anfis.ANFIS(x_back, y_back, x_back, y_back, mfc)
-        anf_back.trainHybridJangOffLine(epochs=10)
-        # record trained parameters
-        np.save('smurf_consequents.npy', anf_back.consequents_final)
-        np.save('smurf_mfs.npy', anf_back.memClass_final)
-
-    # get parameters from neptune attack dataset
-    def neptune_attack_training():
-        # input initial membership functions (gaussian) (4features + 3mfs)
-        mf = [
-            [['gaussmf', {'mean': 0., 'sigma': 1.}], ['gaussmf', {'mean': -1., 'sigma': 2.}],
-             ['gaussmf', {'mean': 2., 'sigma': 3.}]],
-            [['gaussmf', {'mean': 0., 'sigma': 1.}], ['gaussmf', {'mean': -1., 'sigma': 2.}],
-             ['gaussmf', {'mean': 2., 'sigma': 3.}]],
-            [['gaussmf', {'mean': 0., 'sigma': 1.}], ['gaussmf', {'mean': -1., 'sigma': 2.}],
-             ['gaussmf', {'mean': 2., 'sigma': 3.}]],
-            [['gaussmf', {'mean': 0., 'sigma': 1.}], ['gaussmf', {'mean': -1., 'sigma': 2.}],
-             ['gaussmf', {'mean': 2., 'sigma': 3.}]]
-        ]
-        mfc = membership.membershipfunction.MemFuncs(mf)
-
-        x_back, y_back = input_training_data("neptune_attack.csv", 4000, [24, 26, 37, 39], 42)
-        anf_back = anfis.ANFIS(x_back, y_back, x_back, y_back, mfc)
-        anf_back.trainHybridJangOffLine(epochs=10)
-        # record trained parameters
-        np.save('neptune_consequents.npy', anf_back.consequents_final)
-        np.save('neptune_mfs.npy', anf_back.memClass_final)
-
-    # predict back attack using trained parameters
-    def back_attack_testing(testing_dataset, num):
-        f1 = np.load(f'./parameters/back_consequents{num}.npy', allow_pickle=True)
-        f2 = np.load(f'./parameters/back_mfs{num}.npy', allow_pickle=True)
-        # input testing dataset
-        x_test, y_test = testing_dataset
-
-        # input consequents
-        consequents = f1
-
-        # input membership functions
-        mf = f2
-        mfc = membership.membershipfunction.MemFuncs(mf)
-
-        # activate module
-        pred = prediction.PREDICTION(x_test, y_test, mfc, consequents)
-        pred.prediction()
-        # plot error
-        # pred.plotError()
-        return pred.fitted
-
-    # predict smurf attack using trained parameters
-    def smurf_attack_testing(testing_dataset, num):
-        f1 = np.load(f'./parameters/smurf_consequents{num}.npy', allow_pickle=True)
-        f2 = np.load(f'./parameters/smurf_mfs{num}.npy', allow_pickle=True)
-        # input testing dataset
-        x_test, y_test = testing_dataset
-
-        # input consequents
-        consequents = f1
-
-        # input membership functions
-        mf = f2
-        mfc = membership.membershipfunction.MemFuncs(mf)
-
-        # activate module
-        pred = prediction.PREDICTION(x_test, y_test, mfc, consequents)
-        pred.prediction()
-        # plot error
-        # pred.plotError()
-        return pred.fitted
-
-    # predict neptune attack using trained parameters
-    def neptune_attack_testing(testing_dataset, num):
-        f1 = np.load(f'./parameters/neptune_consequents{num}.npy', allow_pickle=True)
-        f2 = np.load(f'./parameters/neptune_mfs{num}.npy', allow_pickle=True)
-        # input testing dataset
-        x_test, y_test = testing_dataset
-
-        # input consequents
-        consequents = f1
-
-        # input membership functions
-        mf = f2
-        mfc = membership.membershipfunction.MemFuncs(mf)
-
-        # activate module
-        pred = prediction.PREDICTION(x_test, y_test, mfc, consequents)
-        pred.prediction()
-        # plot error
-        # pred.plotError()
-
-        return pred.fitted
+    """
+    Create a control panel to control either training or doing prediction
+    0: activate training module
+    1: activate prediction module
+    """
 
     if control == 0:
         # count training time
         start_time = datetime.now()
         # training for back attack
         print("Training back attack")
-        back_attack_training()
+        attack_training('back')
         print("Training smurf attack")
-        smurf_attack_training()
+        attack_training('smurf')
         print("Training neptune attack")
-        neptune_attack_training()
+        attack_training('neptune')
         end_time = datetime.now()
         print('Duration: {}'.format(end_time - start_time))
 
@@ -180,9 +110,9 @@ def control(control):
         back_result = []
         smurf_result = []
         neptune_result = []
-        back_result.append(back_attack_testing(testing_dataset,2))
-        smurf_result.append(smurf_attack_testing(testing_dataset,2))
-        neptune_result.append(neptune_attack_testing(testing_dataset,2))
+        back_result.append(attack_prediction(testing_dataset,'back'))
+        smurf_result.append(attack_prediction(testing_dataset,'smurf'))
+        neptune_result.append(attack_prediction(testing_dataset,'neptune'))
 
         for x in range(len(testing_dataset[0])):
             temp = []
@@ -193,4 +123,3 @@ def control(control):
 
         results_minmax = min_max_scaler.fit_transform(np.array(np.round_(results,2)))
         print(results_minmax)
-control(1)
