@@ -47,12 +47,13 @@ def attack_training(attack):
     ]
     mfc = membership.membershipfunction.MemFuncs(mf)
 
-    x, y = input_training_data(f'{attack}_attack.csv', 4000, [24, 26, 37, 39], 42)
+    x, y = input_training_data(f'./data/{attack}_attack.csv', 4000, [24, 26, 37, 39], 42)
+    print(f"Current attack: {attack}")
     anf = anfis.ANFIS(x, y, x, y, mfc)
     anf.trainHybridJangOffLine(epochs=10)
     # record trained parameters
-    np.save(f'{attack}_consequents.npy', anf.consequents_final)
-    np.save(f'{attack}_mfs.npy', anf.memClass_final)
+    np.save(f'./parameters/{attack}_consequents.npy', anf.consequents_final)
+    np.save(f'./parameters/{attack}_mfs.npy', anf.memClass_final)
 
 
 # predict back attack using trained parameters

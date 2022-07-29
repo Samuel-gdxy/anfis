@@ -88,6 +88,7 @@ class ANFIS:
                     convergence = True
 
             # back propagation
+            dE_dAlpha = [[[]]]
             if convergence is not True:
                 cols = range(len(self.X[0,:]))
                 dE_dAlpha = list(backprop(self, colX, cols, wSum, w, layerFive) for colX in range(self.X.shape[1]))
