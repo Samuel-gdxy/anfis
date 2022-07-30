@@ -7,6 +7,7 @@ import pandas as pd
 import os
 from datetime import datetime
 from sklearn import preprocessing
+import threading
 
 
 # input training dataset
@@ -34,6 +35,16 @@ def training_time_testing(mf, features):
 
 # training anfis model with initial data and parameters
 def attack_training(attack):
+    features = []
+
+    # Customize input features for different attacks
+    if attack == "back":
+        features = [24, 26, 37, 39]
+    elif attack == "smurf":
+        features = [24, 26, 37, 39]
+    elif attack == "neptune":
+        features = [24, 26, 37, 39]
+
     # input initial membership functions (gaussian) (4features + 3mfs)
     mf = [
         [['gaussmf', {'mean': 0., 'sigma': 1.}], ['gaussmf', {'mean': -1., 'sigma': 2.}],
@@ -47,7 +58,7 @@ def attack_training(attack):
     ]
     mfc = membership.membershipfunction.MemFuncs(mf)
 
-    x, y = input_training_data(f'./data/{attack}_attack.csv', 4000, [24, 26, 37, 39], 42)
+    x, y = input_training_data(f'./data/{attack}_attack.csv', 4000, features, 42)
     print(f"Current attack: {attack}")
     anf = anfis.ANFIS(x, y, x, y, mfc)
     anf.trainHybridJangOffLine(epochs=10)
@@ -90,12 +101,9 @@ def control(control):
         # count training time
         start_time = datetime.now()
         # training for back attack
-        print("Training back attack")
-        attack_training('back')
-        print("Training smurf attack")
-        attack_training('smurf')
-        print("Training neptune attack")
-        attack_training('neptune')
+        attacks = ["back", "smurf", "neptune"]
+        for attack in attacks:
+            threading.Thread(target=control.attack_training, args=[attack]).start()
         end_time = datetime.now()
         print('Duration: {}'.format(end_time - start_time))
 
@@ -111,8 +119,11 @@ def control(control):
         back_result = []
         smurf_result = []
         neptune_result = []
+        print("Back attack result:")
         back_result.append(attack_prediction(testing_dataset,'back'))
+        print("Smurf attack result:")
         smurf_result.append(attack_prediction(testing_dataset,'smurf'))
+        print("Neptune attack result:")
         neptune_result.append(attack_prediction(testing_dataset,'neptune'))
 
         for x in range(len(testing_dataset[0])):
@@ -123,4 +134,5 @@ def control(control):
             results.append(temp)
 
         results_minmax = min_max_scaler.fit_transform(np.array(np.round_(results,2)))
+        print("\nResult after min-max normalization:")
         print(results_minmax)

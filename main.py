@@ -1,13 +1,8 @@
 import control
-import anfis
-import prediction
-import membership.mfDerivs
-import membership.membershipfunction
-import threading
 
 
 if __name__ == "__main__":
-    # control.control(1)
+    control.control(1)
     # def call_mfs(num:int):
     #     mf = []
     #     features = []
@@ -94,7 +89,5 @@ if __name__ == "__main__":
     #     control.training_time_testing(mfs, features)
     #
     # multi(8)
-    attacks = ["back", "smurf", "neptune"]
-    for attack in attacks:
-        threading.Thread(target=control.attack_training, args=[attack]).start()
+
 
