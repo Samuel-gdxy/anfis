@@ -103,7 +103,7 @@ def control(control):
         # training for back attack
         attacks = ["back", "smurf", "neptune"]
         for attack in attacks:
-            threading.Thread(target=control.attack_training, args=[attack]).start()
+            threading.Thread(target=attack_training, args=[attack]).start()
         end_time = datetime.now()
         print('Duration: {}'.format(end_time - start_time))
 
