@@ -1,8 +1,13 @@
 import control
+from datetime import datetime
 
 
 if __name__ == "__main__":
-    control.control(1)
+    # count training time
+    start_time = datetime.now()
+    control.control(0)
+    end_time = datetime.now()
+    print('Duration: {}'.format(end_time - start_time))
     # def call_mfs(num:int):
     #     mf = []
     #     features = []
