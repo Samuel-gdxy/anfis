@@ -98,14 +98,11 @@ def control(control):
     """
 
     if control == 0:
-        # count training time
-        start_time = datetime.now()
         # training for back attack
         attacks = ["back", "smurf", "neptune"]
         for attack in attacks:
-            threading.Thread(target=control.attack_training, args=[attack]).start()
-        end_time = datetime.now()
-        print('Duration: {}'.format(end_time - start_time))
+            threading.Thread(target=attack_training, args=[attack]).start()
+
 
     elif control == 1:
         # set up min-max normalization
