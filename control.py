@@ -103,7 +103,6 @@ def control(control):
         for attack in attacks:
             threading.Thread(target=attack_training, args=[attack]).start()
 
-
     elif control == 1:
         # set up min-max normalization
         min_max_scaler = preprocessing.MinMaxScaler()
